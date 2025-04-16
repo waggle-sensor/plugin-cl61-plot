@@ -1,0 +1,16 @@
+name: "push-node2beehive"
+description: "Uploads files from a waggle node home folder to beehive."
+version: "0.25.4.16"
+authors: "Bhupendra Raut and Max Grover"
+collaborators: "Sean Shahkarami, Yongho Kim and Raj Sankaran"
+funding: "CROCUS"
+license: "GNU GPLv3"
+license_url: "https://www.gnu.org/licenses/gpl-3.0.en.html"
+keywords: "rsync, beehive"
+homepage: "https://github.com/waggle-sensor/plugin-push-node2beehive"
+source:
+  architectures:
+    - "linux/amd64"
+    - "linux/arm64"
+  url: "https://github.com/waggle-sensor/plugin-push-node2beehive"
+  branch: "main"
