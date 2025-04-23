@@ -36,7 +36,7 @@ def filter_recent_files(path, file_pattern):
 
     # Pattern for files from the beginning of the last hour to the end of the last hour
     glob_pattern = f"{path}/*{today_str}_{last_hour_str}{file_pattern}"
-    # glob_pattern = "/cl61/cmscl6001_20230801*.nc"
+    glob_pattern = "/cl61/cmscl6001_20230801*.nc"
     logging.info(f'checking files in {glob_pattern}')
     recent_files = glob.glob(glob_pattern)
 
@@ -56,13 +56,13 @@ def plot_dataset(filepaths):
         if var != "linear_depol_ratio":
             ds = act.corrections.correct_ceil(ds, var_name=var)
 
-    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(6, 6), sharex=True)
+    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(10, 10), sharex=True)
     ylim = (0, 8000)
     date_title = f"CROCUS CL61: {np.datetime_as_string(ds['time'].values[0], unit='s')}"
     fig.suptitle(date_title, fontsize=16)
 
     ds["beta_att"].plot(ax=axes[0], x="time", y="range", cmap="PuBuGn", robust=True)
-    ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False)
+    #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False,color='white', linestyle=':')
     axes[0].set_title("Attenuated Volume Backscatter Coefficient")
     axes[0].set_ylim(ylim)
 
@@ -77,7 +77,7 @@ def plot_dataset(filepaths):
     axes[2].set_ylim(ylim)
 
     ds["linear_depol_ratio"].plot(ax=axes[3], x="time", y="range", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
-    ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[3], x='time', add_legend=False)
+    #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[3], x='time', add_legend=False, color='white', linestyle=':')
     axes[3].set_title("Linear Depolarization Ratio")
     axes[3].set_ylim(ylim)
 
@@ -92,23 +92,23 @@ def main(args):
         logging.error(f"The provided path '{args.dir_path}' is not a valid directory.")
         return 1
 
-    with Plugin() as plugin:
-        logging.info("Looking for recent files within the last hour...")
-        recent_files = filter_recent_files(path, args.file_pattern)
-        logging.info(recent_files)
+    #with Plugin() as plugin:
+    logging.info("Looking for recent files within the last hour...")
+    recent_files = filter_recent_files(path, args.file_pattern)
+    logging.info(recent_files)
 
-        if not recent_files:
-            logging.info("No recent files found.")
-            return 0
+    if not recent_files:
+        logging.info("No recent files found.")
+        return 0
 
-        logging.info(f"Found {len(recent_files)} recent files. Plotting...")
-        plot_file = plot_dataset(recent_files)
+    logging.info(f"Found {len(recent_files)} recent files. Plotting...")
+    plot_file = plot_dataset(recent_files)
 
-        if plot_file:
-            logging.info(f"Uploading plot {plot_file}")
-            plugin.upload_file(plot_file, keep=True)
-        else:
-            logging.warning("Plotting failed or no data to plot.")
+    if plot_file:
+        logging.info(f"Uploading plot {plot_file}")
+        #plugin.upload_file(plot_file, keep=True)
+    else:
+        logging.warning("Plotting failed or no data to plot.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot and upload NetCDF data from last hour.")
