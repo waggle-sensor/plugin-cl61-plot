@@ -50,11 +50,12 @@ def plot_dataset(filepaths):
     if not filepaths:
         logging.warning("No recent NetCDF files found for plotting.")
         return None
-
+    logging.info("reading data in xarray...")
     ds = xr.open_mfdataset(filepaths, combine="by_coords")
     logging.info(ds)
     plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
 
+    logging.info("Correcting using ACT")
     variables = ["beta_att", "p_pol", "x_pol"]
     for var in variables:
         if var != "linear_depol_ratio":
@@ -66,6 +67,7 @@ def plot_dataset(filepaths):
     ds['range_km'].attrs['units'] = 'km' 
     ds = ds.swap_dims({'range': 'range_km'})
 
+    logging.info("plotting...")
     fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(10, 10), sharex=True)
     ylim = (0, 8)
 
