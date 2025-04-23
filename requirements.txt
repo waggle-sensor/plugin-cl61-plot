@@ -1,2 +1,5 @@
 pywaggle
 timeout_decorator
+matplotlib
+act-atmos
+xarray
