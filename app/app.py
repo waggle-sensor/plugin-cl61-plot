@@ -36,7 +36,7 @@ def filter_recent_files(path, file_pattern):
 
     # Pattern for files from the beginning of the last hour to the end of the last hour
     glob_pattern = f"{path}*{today_str}_{last_hour_str}{file_pattern}"
-    glob_pattern = "/cl61/cmscl6001_20230801*.nc"
+    # glob_pattern = "/cl61/cmscl6001_20230801*.nc"
     logging.info(f'checking files in {glob_pattern}')
     recent_files = glob.glob(glob_pattern)
 
