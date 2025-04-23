@@ -12,7 +12,7 @@ import glob
 
 
 
-def filter_recent_files(path, file_prefix):
+def filter_recent_files(path, file_pattern):
     """
     Returns a list of filepaths for NetCDF files from the last hour
     by creating glob patterns based on the current time and a file prefix
@@ -35,8 +35,9 @@ def filter_recent_files(path, file_prefix):
     current_hour_str = now.strftime("%H")
 
     # Pattern for files from the beginning of the last hour to the end of the last hour
-    glob_pattern = f"{file_prefix}{today_str}_{last_hour_str}*.nc"
-    glob_pattern = "/CL61/mscl6001_20230801*.nc"
+    glob_pattern = f"{path}*{today_str}_{last_hour_str}{file_pattern}"
+    glob_pattern = "/cl61/cmscl6001_20230801*.nc"
+    logging.info(f'checking files in {glob_pattern}')
     recent_files = glob.glob(glob_pattern)
 
     return recent_files
@@ -48,7 +49,7 @@ def plot_dataset(filepaths):
 
     ds = xr.open_mfdataset(filepaths, combine="by_coords")
     logging.info(ds)
-    plot_file_name = f'CL61_plot_{str(ds['time'].values[-1])}.png'
+    plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
 
     variables = ["beta_att", "p_pol", "x_pol"]
     for var in variables:
