@@ -59,7 +59,7 @@ def plot_dataset(filepaths):
     # for plotting, it is better
     ds = ds.assign(range_km=ds['range'] / 1000)
     ds= ds.assign(sky_condition_cloud_layer_heights_km = ds['sky_condition_cloud_layer_heights']/1000)
-    ds['range_km'].attrs['units'] = 'km' # Optionally add units to the new coordinate
+    ds['range_km'].attrs['units'] = 'km' 
     ds = ds.swap_dims({'range': 'range_km'})
 
     fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(10, 10), sharex=True)
