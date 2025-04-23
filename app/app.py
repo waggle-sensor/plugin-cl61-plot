@@ -14,9 +14,9 @@ import glob
 
 def filter_recent_files(path, file_pattern):
     """
-    Returns a list of filepaths for NetCDF files from the last hour
+    Returns a list of filepaths for NetCDF files from the last given period
     by creating glob patterns based on the current time and a file prefix
-    assuming the filename contains a timestamp with hour information.
+    assuming the filename contains a timestamp in specific format information.
 
     Args:
         path (Path): The directory path to search for files.
@@ -35,7 +35,7 @@ def filter_recent_files(path, file_pattern):
     current_hour_str = now.strftime("%H")
 
     # Pattern for files from the beginning of the last hour to the end of the last hour
-    glob_pattern = f"{path}*{today_str}_{last_hour_str}{file_pattern}"
+    glob_pattern = f"{path}/*{today_str}_{last_hour_str}{file_pattern}"
     # glob_pattern = "/cl61/cmscl6001_20230801*.nc"
     logging.info(f'checking files in {glob_pattern}')
     recent_files = glob.glob(glob_pattern)
@@ -56,7 +56,7 @@ def plot_dataset(filepaths):
         if var != "linear_depol_ratio":
             ds = act.corrections.correct_ceil(ds, var_name=var)
 
-    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(12, 12), sharex=True)
+    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(6, 6), sharex=True)
     ylim = (0, 8000)
     date_title = f"CROCUS CL61: {np.datetime_as_string(ds['time'].values[0], unit='s')}"
     fig.suptitle(date_title, fontsize=16)
@@ -115,6 +115,7 @@ if __name__ == "__main__":
     parser.add_argument("--DEBUG", action="store_true", help="Enable debug logging.")
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
+
     args = parser.parse_args()
 
     logging.basicConfig(
