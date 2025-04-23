@@ -1,4 +1,4 @@
-name: "push-node2beehive"
+name: "cl61-plot"
 description: "Uploads files from a waggle node home folder to beehive."
 version: "0.25.4.16"
 authors: "Bhupendra Raut and Max Grover"
