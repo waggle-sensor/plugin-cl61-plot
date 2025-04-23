@@ -12,7 +12,7 @@ import glob
 
 
 
-def filter_recent_files(path, file_pattern):
+def filter_recent_files(path, file_pattern, plot_day):
     """
     Returns a list of filepaths for NetCDF files from the last given period
     by creating glob patterns based on the current time and a file prefix
@@ -28,19 +28,23 @@ def filter_recent_files(path, file_pattern):
     """
     recent_files = []
     now = datetime.datetime.now()
-    one_hour_ago = now - timedelta(hours=1)
+    if plot_day =='yesterday':
+        plot_day = now - timedelta(days=1)
+    elif plot_day =='today':
+        plot_day= now
 
-    today_str = now.strftime("%Y%m%d")
-    last_hour_str = one_hour_ago.strftime("%H")
-    current_hour_str = now.strftime("%H")
+    plot_day_str = now.strftime("%Y%m%d")
 
     # Pattern for files from the beginning of the last hour to the end of the last hour
-    glob_pattern = f"{path}/*{today_str}_{last_hour_str}{file_pattern}"
-    glob_pattern = "/cl61/cmscl6001_20230801*.nc"
+    glob_pattern = f"{path}/*{plot_day_str}{file_pattern}"
+    #glob_pattern = "/cl61/cmscl6001_20230801*.nc"
     logging.info(f'checking files in {glob_pattern}')
     recent_files = glob.glob(glob_pattern)
 
     return recent_files
+
+
+
 
 def plot_dataset(filepaths):
     if not filepaths:
@@ -101,6 +105,8 @@ def plot_dataset(filepaths):
     plt.close()
     return plot_file_name
 
+
+
 def main(args):
     path = Path(args.dir_path)
     if not path.is_dir():
@@ -108,8 +114,8 @@ def main(args):
         return 1
 
     with Plugin() as plugin:
-        logging.info("Looking for recent files within the last hour...")
-        recent_files = filter_recent_files(path, args.file_pattern)
+        logging.info(f"Looking for {args.period}'s files ...")
+        recent_files = filter_recent_files(path, args.file_pattern, args.period)
         logging.info(recent_files)
 
         if not recent_files:
@@ -130,6 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--DEBUG", action="store_true", help="Enable debug logging.")
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
+    parser.add_argument("--period", type=str, default="yesterday", choices=["today", "yesterday"], help="today/yesterday")
 
     args = parser.parse_args()
 
