@@ -56,29 +56,44 @@ def plot_dataset(filepaths):
         if var != "linear_depol_ratio":
             ds = act.corrections.correct_ceil(ds, var_name=var)
 
+    # for plotting, it is better
+    ds = ds.assign(range_km=ds['range'] / 1000)
+    ds= ds.assign(sky_condition_cloud_layer_heights_km = ds['sky_condition_cloud_layer_heights']/1000)
+    ds['range_km'].attrs['units'] = 'km' # Optionally add units to the new coordinate
+    ds = ds.swap_dims({'range': 'range_km'})
+
     fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(10, 10), sharex=True)
-    ylim = (0, 8000)
+    ylim = (0, 8)
+
     date_title = f"CROCUS CL61: {np.datetime_as_string(ds['time'].values[0], unit='s')}"
     fig.suptitle(date_title, fontsize=16)
 
-    ds["beta_att"].plot(ax=axes[0], x="time", y="range", cmap="PuBuGn", robust=True)
+    ds["beta_att"].plot(ax=axes[0], x="time", y="range_km", cmap="PuBuGn", robust=True)
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False,color='white', linestyle=':')
     axes[0].set_title("Attenuated Volume Backscatter Coefficient")
+    axes[0].set_xlabel("Time [UTC]")
+    axes[0].set_ylabel("Height [km]")
     axes[0].set_ylim(ylim)
 
-    ds["p_pol"].plot(ax=axes[1], x="time", y="range", cmap="viridis", robust=True, vmin=-8, vmax=8)
-    ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[1], x='time', add_legend=False)
+    ds["p_pol"].plot(ax=axes[1], x="time", y="range_km", cmap="viridis", robust=True, vmin=-8, vmax=8)
+    ds['sky_condition_cloud_layer_heights_km'].plot.line(ax=axes[1], x='time', add_legend=False)
     axes[1].set_title("Parallel-Polarized Component")
+    axes[1].set_xlabel("Time [UTC]")
+    axes[1].set_ylabel("Height [km]")
     axes[1].set_ylim(ylim)
 
-    ds["x_pol"].plot(ax=axes[2], x="time", y="range", cmap="viridis", robust=True, vmin=-8, vmax=8)
-    ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[2], x='time', add_legend=False)
+    ds["x_pol"].plot(ax=axes[2], x="time", y="range_km", cmap="viridis", robust=True, vmin=-8, vmax=8)
+    ds['sky_condition_cloud_layer_heights_km'].plot.line(ax=axes[2], x='time', add_legend=False)
     axes[2].set_title("Cross-Polarized Component")
+    axes[2].set_xlabel("Time [UTC]")
+    axes[2].set_ylabel("Height [km]")
     axes[2].set_ylim(ylim)
 
-    ds["linear_depol_ratio"].plot(ax=axes[3], x="time", y="range", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
+    ds["linear_depol_ratio"].plot(ax=axes[3], x="time", y="range_km", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[3], x='time', add_legend=False, color='white', linestyle=':')
     axes[3].set_title("Linear Depolarization Ratio")
+    axes[3].set_xlabel("Time [UTC]")
+    axes[3].set_ylabel("Height [km]")
     axes[3].set_ylim(ylim)
 
     plt.tight_layout()
