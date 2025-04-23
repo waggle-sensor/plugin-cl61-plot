@@ -107,23 +107,23 @@ def main(args):
         logging.error(f"The provided path '{args.dir_path}' is not a valid directory.")
         return 1
 
-    #with Plugin() as plugin:
-    logging.info("Looking for recent files within the last hour...")
-    recent_files = filter_recent_files(path, args.file_pattern)
-    logging.info(recent_files)
+    with Plugin() as plugin:
+        logging.info("Looking for recent files within the last hour...")
+        recent_files = filter_recent_files(path, args.file_pattern)
+        logging.info(recent_files)
 
-    if not recent_files:
-        logging.info("No recent files found.")
-        return 0
+        if not recent_files:
+            logging.info("No recent files found.")
+            return 0
 
-    logging.info(f"Found {len(recent_files)} recent files. Plotting...")
-    plot_file = plot_dataset(recent_files)
+        logging.info(f"Found {len(recent_files)} recent files. Plotting...")
+        plot_file = plot_dataset(recent_files)
 
-    if plot_file:
-        logging.info(f"Uploading plot {plot_file}")
-        #plugin.upload_file(plot_file, keep=True)
-    else:
-        logging.warning("Plotting failed or no data to plot.")
+        if plot_file:
+            logging.info(f"Uploading plot {plot_file}")
+            plugin.upload_file(plot_file)
+        else:
+            logging.warning("Plotting failed or no data to plot.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot and upload NetCDF data from last hour.")
