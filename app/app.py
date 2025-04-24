@@ -12,7 +12,7 @@ import glob
 
 
 
-def filter_recent_files(path, file_pattern, plot_day):
+def filter_recent_files(path, file_pattern, period):
     """
     Returns a list of filepaths for NetCDF files from the last given period
     by creating glob patterns based on the current time and a file prefix
@@ -28,22 +28,20 @@ def filter_recent_files(path, file_pattern, plot_day):
     """
     recent_files = []
     now = datetime.datetime.now()
-    if plot_day =='yesterday':
-        plot_day = now - timedelta(days=1)
-    elif plot_day =='today':
-        plot_day= now
+    if period =='yesterday':
+        plot_time = now - timedelta(days=1)
+    elif period =='today':
+        plot_time= now
 
-    plot_day_str = now.strftime("%Y%m%d")
+    plot_date = plot_time.strftime("%Y%m%d")
 
     # Pattern for files from the beginning of the last hour to the end of the last hour
-    glob_pattern = f"{path}/*{plot_day_str}{file_pattern}"
+    glob_pattern = f"{path}/*{plot_date}{file_pattern}"
     #glob_pattern = "/cl61/cmscl6001_20230801*.nc"
     logging.info(f'checking files in {glob_pattern}')
     recent_files = glob.glob(glob_pattern)
 
     return recent_files
-
-
 
 
 def plot_dataset(filepaths):
@@ -124,7 +122,7 @@ def main(args):
             logging.info("No recent files found.")
             return 0
 
-        logging.info(f"Found {len(recent_files)} recent files. Plotting...")
+        logging.info(f"Found {len(recent_files)} recent files.")
         plot_file = plot_dataset(recent_files)
 
         if plot_file:
