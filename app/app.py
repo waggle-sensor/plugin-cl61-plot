@@ -137,6 +137,7 @@ if __name__ == "__main__":
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
     parser.add_argument("--period", type=str, default="yesterday", choices=["today", "yesterday"], help="today/yesterday")
+    
 
     args = parser.parse_args()
 
