@@ -9,6 +9,7 @@ from datetime import timedelta
 from waggle.plugin import Plugin
 import datetime
 import glob
+import timeout_decorator
 
 
 
@@ -43,8 +44,8 @@ def filter_recent_files(path, file_pattern, period):
 
     return recent_files
 
-
-def plot_dataset(filepaths):
+@timeout_decorator.timeout(600, timeout_exception=TimeoutError)
+def plot_dataset(filepaths, args):
     if not filepaths:
         logging.warning("No recent NetCDF files found for plotting.")
         return None
@@ -66,8 +67,9 @@ def plot_dataset(filepaths):
     ds = ds.swap_dims({'range': 'range_km'})
 
     logging.info("plotting...")
-    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(10, 10), sharex=True)
-    ylim = (0, 8)
+    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(args.plot_size, args.plot_size), sharex=True)
+
+    ylim = (0, args.plot_height)
 
     date_title = f"CROCUS CL61: {np.datetime_as_string(ds['time'].values[0], unit='s')}"
     fig.suptitle(date_title, fontsize=16)
@@ -113,31 +115,42 @@ def main(args):
         logging.error(f"The provided path '{args.dir_path}' is not a valid directory.")
         return 1
 
+
     with Plugin() as plugin:
-        logging.info(f"Looking for {args.period}'s files ...")
-        recent_files = filter_recent_files(path, args.file_pattern, args.period)
-        logging.info(recent_files)
+        try:
+            logging.info(f"Looking for {args.period}'s files ...")
+            recent_files = filter_recent_files(path, args.file_pattern, args.period)
+            logging.info(recent_files)
 
-        if not recent_files:
-            logging.info("No recent files found.")
-            return 0
+            if not recent_files:
+                logging.info("No recent files found.")
+                plugin.publish("Error", "No recent files found.")
+                return 0
 
-        logging.info(f"Found {len(recent_files)} recent files.")
-        plot_file = plot_dataset(recent_files)
+            logging.info(f"Found {len(recent_files)} recent files.")
+            plugin.publish("Status", "Found {len(recent_files)} recent files.")
+            plot_file = plot_dataset(recent_files, args)
 
-        if plot_file:
-            logging.info(f"Uploading plot {plot_file}")
-            plugin.upload_file(plot_file)
-        else:
-            logging.warning("Plotting failed or no data to plot.")
+            if plot_file:
+                logging.info(f"Uploading plot {plot_file}")
+                plugin.upload_file(plot_file)
+            else:
+                logging.warning
+                plugin.publish("Error", "Plotting failed or no data to plot.")
 
+        except Exception as e:
+            logging.exception(e)
+            plugin.publish("Error", e)
+            return 2
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot and upload NetCDF data from last hour.")
     parser.add_argument("--DEBUG", action="store_true", help="Enable debug logging.")
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
     parser.add_argument("--period", type=str, default="yesterday", choices=["today", "yesterday"], help="today/yesterday")
-    
+    parser.add_argument("--plot_size", type=str, default=12, help="plot size square.")
+    parser.add_argument("--plot_height", type=int, default=8, help="plot max height range in km.")
 
     args = parser.parse_args()
 
