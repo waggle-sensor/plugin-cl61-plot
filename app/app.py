@@ -124,11 +124,11 @@ def main(args):
 
             if not recent_files:
                 logging.info("No recent files found.")
-                plugin.publish("Error", "No recent files found.")
+                plugin.publish("error", "No recent files found.")
                 return 0
 
             logging.info(f"Found {len(recent_files)} recent files.")
-            plugin.publish("Status", "Found {len(recent_files)} recent files.")
+            plugin.publish("status", "Found {len(recent_files)} recent files.")
             plot_file = plot_dataset(recent_files, args)
 
             if plot_file:
@@ -136,11 +136,11 @@ def main(args):
                 plugin.upload_file(plot_file)
             else:
                 logging.warning
-                plugin.publish("Error", "Plotting failed or no data to plot.")
+                plugin.publish("error", "Plotting failed or no data to plot.")
 
         except Exception as e:
             logging.exception(e)
-            plugin.publish("Error", e)
+            plugin.publish("error", e)
             return 2
         
 if __name__ == "__main__":
