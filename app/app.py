@@ -50,7 +50,7 @@ def plot_dataset(filepaths, args):
         logging.warning("No recent NetCDF files found for plotting.")
         return None
     logging.info("reading data in xarray...")
-    ds = xr.open_mfdataset(filepaths, combine="by_coords")
+    ds = xr.open_mfdataset(filepaths, concat_dim='time', combine='nested', parallel=True)
     logging.info(ds)
     plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
 
@@ -128,7 +128,7 @@ def main(args):
                 return 0
 
             logging.info(f"Found {len(recent_files)} recent files.")
-            plugin.publish("status", "Found {str(len(recent_files))} recent files.")
+            plugin.publish("status", f"Found {len(recent_files)} recent files.")
             plot_file = plot_dataset(recent_files, args)
 
             if plot_file:
