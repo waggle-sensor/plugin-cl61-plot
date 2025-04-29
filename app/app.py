@@ -12,7 +12,6 @@ import glob
 import timeout_decorator
 
 
-
 def filter_recent_files(path, file_pattern, period):
     """
     Returns a list of filepaths for NetCDF files from the last given period
@@ -27,20 +26,27 @@ def filter_recent_files(path, file_pattern, period):
         list: A list of pathlib.Path objects for the NetCDF files found
               from the last hour.
     """
-    recent_files = []
+
     now = datetime.datetime.now()
-    if period =='yesterday':
-        plot_time = now - timedelta(days=1)
-    elif period =='today':
-        plot_time= now
 
-    plot_date = plot_time.strftime("%Y%m%d")
+    if period == 'last_hour':
+        start_time = now - datetime.timedelta(hours=1)
+        date_str = start_time.strftime("%Y%m%d_%H")  # e.g., 2025042914
+        glob_pattern = f"{path}/*{date_str}*{file_pattern}"
+    elif period == 'today':
+        date_str = now.strftime("%Y%m%d")  # e.g., 20250429
+        glob_pattern = f"{path}/*{date_str}{file_pattern}"
+    elif period == 'yesterday':
+        yesterday = now - datetime.timedelta(days=1)
+        date_str = yesterday.strftime("%Y%m%d")  # e.g., 20250428
+        glob_pattern = f"{path}/*{date_str}{file_pattern}"
+    else:
+        raise ValueError(f"Unsupported period: {period}")
 
-    # Pattern for files from the beginning of the last hour to the end of the last hour
-    glob_pattern = f"{path}/*{plot_date}{file_pattern}"
-    #glob_pattern = "/cl61/cmscl6001_20230801*.nc"
-    logging.info(f'checking files in {glob_pattern}')
+    logging.info(f"Searching files with pattern: {glob_pattern}")
+
     recent_files = glob.glob(glob_pattern)
+    recent_files.sort()
 
     return recent_files
 
@@ -140,7 +146,7 @@ def main(args):
 
         except Exception as e:
             logging.exception(e)
-            plugin.publish("error", e)
+            plugin.publish("error", "Unexpected Error")
             return 2
         
 if __name__ == "__main__":
@@ -148,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("--DEBUG", action="store_true", help="Enable debug logging.")
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
-    parser.add_argument("--period", type=str, default="yesterday", choices=["today", "yesterday"], help="today/yesterday")
+    parser.add_argument("--period", type=str, default="last_hour", choices=["today", "yesterday", "last_hour"], help="today/yesterday/last_hour")
     parser.add_argument("--plot_size", type=str, default=12, help="plot size square.")
     parser.add_argument("--plot_height", type=int, default=8, help="plot max height range in km.")
 
