@@ -107,6 +107,7 @@ def plot_dataset(ds, args):
 
     ds["beta_att"].plot(ax=axes[0], x="time", y="range_km", cmap="PuBuGn", robust=True)
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False,color='white', linestyle=':')
+    plot_cloud_heights(axes[0], ds)
     axes[0].set_title("Attenuated Volume Backscatter Coefficient")
     axes[0].set_xlabel("Time [UTC]")
     axes[0].set_ylabel("Height [km]")
@@ -137,6 +138,39 @@ def plot_dataset(ds, args):
     plt.savefig(plot_file_name)
     plt.close()
     return plot_file_name
+
+
+
+
+def plot_cloud_heights(ax, ds):
+    """
+    Plots cloud layer heights as small white '~' scatter markers.
+    """
+    if 'sky_condition_cloud_layer_heights_km' not in ds:
+        return
+
+    cloud_heights = ds['sky_condition_cloud_layer_heights_km'].values
+    times = ds['time'].values
+
+    # Flatten if it's a 2D array: (time, layers)
+    if len(cloud_heights.shape) == 2:
+        times = np.repeat(times, cloud_heights.shape[1])
+        heights = cloud_heights.flatten()
+    else:
+        heights = cloud_heights
+        times = np.tile(times, 1)
+
+    # Filter valid points
+    mask = ~np.isnan(heights)
+    ax.scatter(
+        times[mask],
+        heights[mask],
+        marker=1,
+        c='black',
+        s=5,
+        linewidths=0.2
+    )
+
 
 
 def main(args):
@@ -181,7 +215,9 @@ def main(args):
             logging.exception(e)
             plugin.publish("error", "Unexpected Error")
             return 2
-        
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot and upload NetCDF data from last hour.")
     parser.add_argument("--DEBUG", action="store_true", help="Enable debug logging.")
