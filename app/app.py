@@ -10,6 +10,7 @@ from waggle.plugin import Plugin
 import datetime
 import glob
 import timeout_decorator
+import os
 
 
 def filter_recent_files(path, file_pattern, period):
@@ -50,21 +51,44 @@ def filter_recent_files(path, file_pattern, period):
 
     return recent_files
 
-@timeout_decorator.timeout(600, timeout_exception=TimeoutError)
-def plot_dataset(filepaths, args):
+
+def read_files_ds(filepaths):
     if not filepaths:
         logging.warning("No recent NetCDF files found for plotting.")
         return None
+    
     logging.info("reading data in xarray...")
-    ds = xr.open_mfdataset(filepaths, concat_dim='time', combine='nested', parallel=True)
+    ds = xr.open_mfdataset(filepaths, concat_dim='time', combine='nested')
+    ds = ds.sortby("time")
     logging.info(ds)
-    plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
 
     logging.info("Correcting using ACT")
     variables = ["beta_att", "p_pol", "x_pol"]
     for var in variables:
         if var != "linear_depol_ratio":
             ds = act.corrections.correct_ceil(ds, var_name=var)
+    
+    return ds
+
+
+
+def ds_to_netcdf(ds, args, outdir='/tmp/nc/'):
+    date_str = ds['time'].values[-1].strftime("%Y%m%d")
+    time_units = f"seconds since {date_str} 00:00:00"
+
+    encoding = {
+    "time": {
+        "units": time_units,
+        "calendar": "standard",
+        "dtype": "float64",
+        }
+    }
+    output_path = os.path.join(outdir, f"{args.file_prefix}{date_str}-000000.nc")
+    ds.to_netcdf(output_path, encoding=encoding)
+
+
+@timeout_decorator.timeout(300, timeout_exception=TimeoutError)
+def plot_dataset(ds, args):
 
     # for plotting, it is better
     ds = ds.assign(range_km=ds['range'] / 1000)
@@ -73,6 +97,7 @@ def plot_dataset(filepaths, args):
     ds = ds.swap_dims({'range': 'range_km'})
 
     logging.info("plotting...")
+    plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
     fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(args.plot_size, args.plot_size), sharex=True)
 
     ylim = (0, args.plot_height)
@@ -114,7 +139,6 @@ def plot_dataset(filepaths, args):
     return plot_file_name
 
 
-
 def main(args):
     path = Path(args.dir_path)
     if not path.is_dir():
@@ -135,8 +159,17 @@ def main(args):
 
             logging.info(f"Found {len(recent_files)} recent files.")
             plugin.publish("status", f"Found {len(recent_files)} recent files.")
-            plot_file = plot_dataset(recent_files, args)
+            
+            ds = read_files_ds(recent_files)
+            nc_file = ds_to_netcdf(ds, args)
+            if nc_file:
+                logging.info(f"Uploading netcdf {nc_file}")
+                plugin.upload_file(nc_file)
+            else:
+                logging.warning
+                plugin.publish("error", "Netcdf creation failed or no data.")
 
+            plot_file = plot_dataset(ds, args)
             if plot_file:
                 logging.info(f"Uploading plot {plot_file}")
                 plugin.upload_file(plot_file)
@@ -157,6 +190,7 @@ if __name__ == "__main__":
     parser.add_argument("--period", type=str, default="last_hour", choices=["today", "yesterday", "last_hour"], help="today/yesterday/last_hour")
     parser.add_argument("--plot_size", type=str, default=12, help="plot size square.")
     parser.add_argument("--plot_height", type=int, default=8, help="plot max height range in km.")
+    parser.add_argument("--file_prefix", type=str, required=True, help="crocus-neiu-ceil-a1-")
 
     args = parser.parse_args()
 
