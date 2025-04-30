@@ -73,7 +73,12 @@ def read_files_ds(filepaths):
 
 
 def ds_to_netcdf(ds, args, outdir='/tmp/nc/'):
-    date_str = ds['time'].values[-1].strftime("%Y%m%d")
+    # Convert the numpy.datetime64 object to a Python datetime object
+    timestamp_ns = ds['time'].values[-1].astype('datetime64[ns]')
+    timestamp_py = datetime.utcfromtimestamp(timestamp_ns.astype('O') // 1e9)
+
+    date_str = timestamp_py.strftime("%Y%m%d")
+    
     time_units = f"seconds since {date_str} 00:00:00"
 
     encoding = {
@@ -85,6 +90,7 @@ def ds_to_netcdf(ds, args, outdir='/tmp/nc/'):
     }
     output_path = os.path.join(outdir, f"{args.file_prefix}{date_str}-000000.nc")
     ds.to_netcdf(output_path, encoding=encoding)
+    return output_path
 
 
 @timeout_decorator.timeout(300, timeout_exception=TimeoutError)
