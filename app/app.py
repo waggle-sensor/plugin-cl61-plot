@@ -11,6 +11,7 @@ import datetime
 import glob
 import timeout_decorator
 import os
+from pandas import to_datetime
 
 
 def filter_recent_files(path, file_pattern, period):
@@ -73,12 +74,10 @@ def read_files_ds(filepaths):
 
 
 def ds_to_netcdf(ds, args, outdir='/tmp/nc/'):
-    # Convert the numpy.datetime64 object to a Python datetime object
-    timestamp_ns = ds['time'].values[-1].astype('datetime64[ns]')
-    timestamp_py = datetime.utcfromtimestamp(timestamp_ns.astype('O') // 1e9)
+    timestamp = to_datetime(ds['time'].values[-1])
+    # Then, you can use strftime on the Timestamp object
+    date_str = timestamp.strftime("%Y%m%d")
 
-    date_str = timestamp_py.strftime("%Y%m%d")
-    
     time_units = f"seconds since {date_str} 00:00:00"
 
     encoding = {
