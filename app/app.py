@@ -96,7 +96,6 @@ def ds_to_netcdf(ds, args, outdir='/tmp/'):
         }
     }
     output_path = os.path.join(outdir, f"{args.file_prefix}{date_str}0000.nc")
-    output_path = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
     ds.to_netcdf(output_path, encoding=encoding)
 
     return output_path
