@@ -82,7 +82,7 @@ def read_files_ds(filepaths):
 
 
 def ds_to_netcdf(ds, args, outdir='/tmp/'):
-    timestamp = to_datetime(ds['time'].values[0])
+    timestamp = to_datetime(ds['time'].values[-1])
     # Then, you can use strftime on the Timestamp object
     date_str = timestamp.strftime("%Y%m%d-%H")
 
