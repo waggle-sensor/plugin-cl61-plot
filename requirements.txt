@@ -3,3 +3,4 @@ timeout_decorator
 matplotlib
 dask
 xarray
+act-atmos

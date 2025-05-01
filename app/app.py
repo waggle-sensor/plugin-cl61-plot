@@ -82,9 +82,9 @@ def read_files_ds(filepaths):
 
 
 def ds_to_netcdf(ds, args, outdir='/tmp/'):
-    timestamp = to_datetime(ds['time'].values[-1])
+    timestamp = to_datetime(ds['time'].values[0])
     # Then, you can use strftime on the Timestamp object
-    date_str = timestamp.strftime("%Y%m%d")
+    date_str = timestamp.strftime("%Y%m%d-%H")
 
     time_units = f"seconds since {date_str} 00:00:00"
 
@@ -95,7 +95,8 @@ def ds_to_netcdf(ds, args, outdir='/tmp/'):
         "dtype": "float64",
         }
     }
-    output_path = os.path.join(outdir, f"{args.file_prefix}{date_str}-000000.nc")
+    output_path = os.path.join(outdir, f"{args.file_prefix}{date_str}0000.nc")
+    output_path = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
     ds.to_netcdf(output_path, encoding=encoding)
 
     return output_path
@@ -229,7 +230,6 @@ def main(args):
         except Exception as e:
             logging.exception(e)
             plugin.publish("error", "Unexpected Error")
-            ds.close()
             return 2
 
 
