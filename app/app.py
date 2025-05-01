@@ -210,13 +210,15 @@ def main(args):
             plugin.publish("status", f"Found {len(recent_files)} recent files.")
             
             ds = read_files_ds(recent_files)
-            nc_file = ds_to_netcdf(ds, args)
-            if nc_file:
-                logging.info(f"Uploading netcdf {nc_file}")
-                plugin.upload_file(nc_file)
-            else:
-                logging.warning
-                plugin.publish("error", "Netcdf creation failed or no data.")
+            
+            if args.upload_nc:
+                nc_file = ds_to_netcdf(ds, args)
+                if nc_file:
+                    logging.info(f"Uploading netcdf {nc_file}")
+                    plugin.upload_file(nc_file)
+                else:
+                    logging.warning
+                    plugin.publish("error", "Netcdf creation failed or no data.")
 
             plot_file = plot_dataset(ds, args)
             if plot_file:
@@ -242,6 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--plot_size", type=str, default=8, help="plot size square.")
     parser.add_argument("--plot_height", type=int, default=8, help="plot max height range in km.")
     parser.add_argument("--file_prefix", type=str, required=True, help="crocus-neiu-ceil-a1-")
+    parser.add_argument("--upload_nc", action='store_true')
 
     args = parser.parse_args()
 
