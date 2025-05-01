@@ -65,15 +65,27 @@ def read_files_ds(filepaths):
 
     logging.info("Correcting using ACT")
     variables = ["beta_att", "p_pol", "x_pol"]
-    for var in variables:
-        if var != "linear_depol_ratio":
-            ds = act.corrections.correct_ceil(ds, var_name=var)
+
+    for var_name in variables:
+        if var_name != "linear_depol_ratio":
+            data = ds[var_name].data
+            data[data <= 0] = 1e-7
+            data = np.log10(data)
+
+            ds[var_name].values = data
+            if 'units' in ds[var_name].attrs:
+                ds[var_name].attrs['units'] = 'log(' + ds[var_name].attrs['units'] + ')'
+            else:
+                ds[var_name].attrs['units'] = 'log(unknown)'
     
     return ds
 
 
 
-def ds_to_netcdf(ds, args, outdir='/tmp/nc/'):
+
+
+
+def ds_to_netcdf(ds, args, outdir='/tmp/'):
     timestamp = to_datetime(ds['time'].values[-1])
     # Then, you can use strftime on the Timestamp object
     date_str = timestamp.strftime("%Y%m%d")
@@ -89,6 +101,7 @@ def ds_to_netcdf(ds, args, outdir='/tmp/nc/'):
     }
     output_path = os.path.join(outdir, f"{args.file_prefix}{date_str}-000000.nc")
     ds.to_netcdf(output_path, encoding=encoding)
+
     return output_path
 
 
@@ -219,6 +232,7 @@ def main(args):
         except Exception as e:
             logging.exception(e)
             plugin.publish("error", "Unexpected Error")
+            ds.close()
             return 2
 
 
