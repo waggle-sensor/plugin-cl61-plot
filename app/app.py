@@ -62,21 +62,17 @@ def read_files_ds(filepaths):
     ds = ds.sortby("time")
     logging.info(ds)
 
-    logging.info("Correcting using ACT")
-    variables = ["beta_att", "p_pol", "x_pol"]
-
     # copied from ACT
-    for var_name in variables:
-        if var_name != "linear_depol_ratio":
-            data = ds[var_name].data
-            data[data <= 0] = 1e-7
-            data = np.log10(data)
+    var_name = 'beta_att'
+    data = ds[var_name].data
+    data[data <= 0] = 1e-7
+    data = np.log10(data)
 
-            ds[var_name].values = data
-            if 'units' in ds[var_name].attrs:
-                ds[var_name].attrs['units'] = 'log(' + ds[var_name].attrs['units'] + ')'
-            else:
-                ds[var_name].attrs['units'] = 'log(unknown)'
+    ds[var_name].values = data
+    if 'units' in ds[var_name].attrs:
+        ds[var_name].attrs['units'] = 'log(' + ds[var_name].attrs['units'] + ')'
+    else:
+        ds[var_name].attrs['units'] = 'log(unknown)'
     
     return ds
 
