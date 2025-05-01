@@ -4,7 +4,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-import act
 from datetime import timedelta
 from waggle.plugin import Plugin
 import datetime
@@ -66,6 +65,7 @@ def read_files_ds(filepaths):
     logging.info("Correcting using ACT")
     variables = ["beta_att", "p_pol", "x_pol"]
 
+    # copied from ACT
     for var_name in variables:
         if var_name != "linear_depol_ratio":
             data = ds[var_name].data
@@ -116,12 +116,12 @@ def plot_dataset(ds, args):
 
     logging.info("plotting...")
     plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
-    fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(args.plot_size, args.plot_size), sharex=True)
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(args.plot_size, args.plot_size), sharex=True)
 
     ylim = (0, args.plot_height)
 
-    date_title = f"CROCUS CL61: {np.datetime_as_string(ds['time'].values[0], unit='s')}"
-    fig.suptitle(date_title, fontsize=16)
+    date_title = f"{args.file_prefix}{args.period} {np.datetime_as_string(ds['time'].values[0], unit='s')}"
+    fig.suptitle(date_title, fontsize=12)
 
     ds["beta_att"].plot(ax=axes[0], x="time", y="range_km", cmap="PuBuGn", robust=True)
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False,color='white', linestyle=':')
@@ -131,26 +131,27 @@ def plot_dataset(ds, args):
     axes[0].set_ylabel("Height [km]")
     axes[0].set_ylim(ylim)
 
-    ds["p_pol"].plot(ax=axes[1], x="time", y="range_km", cmap="viridis", robust=True, vmin=-8, vmax=8)
-    ds['sky_condition_cloud_layer_heights_km'].plot.line(ax=axes[1], x='time', add_legend=False)
-    axes[1].set_title("Parallel-Polarized Component")
+    #ds["p_pol"].plot(ax=axes[1], x="time", y="range_km", cmap="viridis", robust=True, vmin=-8, vmax=8)
+    #ds['sky_condition_cloud_layer_heights_km'].plot.line(ax=axes[1], x='time', add_legend=False)
+    #axes[1].set_title("Parallel-Polarized Component")
+    #axes[1].set_xlabel("Time [UTC]")
+    #axes[1].set_ylabel("Height [km]")
+    #axes[1].set_ylim(ylim)
+
+    #ds["x_pol"].plot(ax=axes[2], x="time", y="range_km", cmap="viridis", robust=True, vmin=-8, vmax=8)
+    #ds['sky_condition_cloud_layer_heights_km'].plot.line(ax=axes[2], x='time', add_legend=False)
+    #axes[2].set_title("Cross-Polarized Component")
+    #axes[2].set_xlabel("Time [UTC]")
+    #axes[2].set_ylabel("Height [km]")
+    #axes[2].set_ylim(ylim)
+
+    ds["linear_depol_ratio"].plot(ax=axes[1], x="time", y="range_km", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
+    plot_cloud_heights(axes[1], ds)
+    #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[3], x='time', add_legend=False, color='white', linestyle=':')
+    axes[1].set_title("Linear Depolarization Ratio")
     axes[1].set_xlabel("Time [UTC]")
     axes[1].set_ylabel("Height [km]")
     axes[1].set_ylim(ylim)
-
-    ds["x_pol"].plot(ax=axes[2], x="time", y="range_km", cmap="viridis", robust=True, vmin=-8, vmax=8)
-    ds['sky_condition_cloud_layer_heights_km'].plot.line(ax=axes[2], x='time', add_legend=False)
-    axes[2].set_title("Cross-Polarized Component")
-    axes[2].set_xlabel("Time [UTC]")
-    axes[2].set_ylabel("Height [km]")
-    axes[2].set_ylim(ylim)
-
-    ds["linear_depol_ratio"].plot(ax=axes[3], x="time", y="range_km", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
-    #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[3], x='time', add_legend=False, color='white', linestyle=':')
-    axes[3].set_title("Linear Depolarization Ratio")
-    axes[3].set_xlabel("Time [UTC]")
-    axes[3].set_ylabel("Height [km]")
-    axes[3].set_ylim(ylim)
 
     plt.tight_layout()
     plt.savefig(plot_file_name)
@@ -160,7 +161,7 @@ def plot_dataset(ds, args):
 
 
 
-def plot_cloud_heights(ax, ds):
+def plot_cloud_heights(ax, ds, color='black'):
     """
     Plots cloud layer heights as small white '~' scatter markers.
     """
@@ -184,7 +185,7 @@ def plot_cloud_heights(ax, ds):
         times[mask],
         heights[mask],
         marker=1,
-        c='black',
+        c=color,
         s=5,
         linewidths=0.2
     )
@@ -243,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
     parser.add_argument("--period", type=str, default="last_hour", choices=["today", "yesterday", "last_hour"], help="today/yesterday/last_hour")
-    parser.add_argument("--plot_size", type=str, default=12, help="plot size square.")
+    parser.add_argument("--plot_size", type=str, default=8, help="plot size square.")
     parser.add_argument("--plot_height", type=int, default=8, help="plot max height range in km.")
     parser.add_argument("--file_prefix", type=str, required=True, help="crocus-neiu-ceil-a1-")
 
