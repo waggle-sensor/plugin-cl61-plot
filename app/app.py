@@ -101,7 +101,7 @@ def ds_to_netcdf(ds, args, outdir='/tmp/'):
     return output_path
 
 
-@timeout_decorator.timeout(300, timeout_exception=TimeoutError)
+#@timeout_decorator.timeout(600, timeout_exception=TimeoutError)
 def plot_dataset(ds, args):
 
     # for plotting, it is better
