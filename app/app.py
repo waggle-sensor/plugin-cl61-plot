@@ -112,12 +112,12 @@ def plot_dataset(ds, args):
 
     logging.info("plotting...")
     plot_file_name = f'/tmp/cl61_plot_{str(ds["time"].values[-1])}.png'
+    date_title = f"{args.file_prefix} {np.datetime_as_string(ds['time'].values[-1], unit='s')}"
     fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(args.plot_size, args.plot_size), sharex=True)
 
-    ylim = (0, args.plot_height)
+    fig.suptitle(date_title, fontsize=10)
 
-    date_title = f"{args.file_prefix}{args.period} {np.datetime_as_string(ds['time'].values[0], unit='s')}"
-    fig.suptitle(date_title, fontsize=12)
+    ylim = (0, args.plot_height)
 
     ds["beta_att"].plot(ax=axes[0], x="time", y="range_km", cmap="PuBuGn", robust=True)
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False,color='white', linestyle=':')
@@ -155,8 +155,6 @@ def plot_dataset(ds, args):
     return plot_file_name
 
 
-
-
 def plot_cloud_heights(ax, ds, color='black'):
     """
     Plots cloud layer heights as small white '~' scatter markers.
@@ -185,7 +183,6 @@ def plot_cloud_heights(ax, ds, color='black'):
         s=5,
         linewidths=0.2
     )
-
 
 
 def main(args):
@@ -219,14 +216,14 @@ def main(args):
                 else:
                     logging.warning
                     plugin.publish("error", "Netcdf creation failed or no data.")
-
-            plot_file = plot_dataset(ds, args)
-            if plot_file:
-                logging.info(f"Uploading plot {plot_file}")
-                plugin.upload_file(plot_file)
-            else:
-                logging.warning
-                plugin.publish("error", "Plotting failed or no data to plot.")
+            if not args.skip_plot:
+                plot_file = plot_dataset(ds, args)
+                if plot_file:
+                    logging.info(f"Uploading plot {plot_file}")
+                    plugin.upload_file(plot_file)
+                else:
+                    logging.warning
+                    plugin.publish("error", "Plotting failed or no data to plot.")
 
         except Exception as e:
             logging.exception(e)
@@ -234,17 +231,18 @@ def main(args):
             return 2
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot and upload NetCDF data from last hour.")
     parser.add_argument("--DEBUG", action="store_true", help="Enable debug logging.")
     parser.add_argument("--dir-path", type=str, default="/cl61/", help="Directory path to search for files.")
     parser.add_argument("--file-pattern", type=str, default="*.nc", help="File pattern to match.")
-    parser.add_argument("--period", type=str, default="last_hour", choices=["today", "yesterday", "last_hour"], help="today/yesterday/last_hour")
+    parser.add_argument("--period", type=str, default="last_hour", 
+                        choices=["today", "yesterday", "last_hour"], help="today/yesterday/last_hour")
     parser.add_argument("--plot_size", type=str, default=8, help="plot size square.")
     parser.add_argument("--plot_height", type=int, default=8, help="plot max height range in km.")
-    parser.add_argument("--file_prefix", type=str, required=True, help="crocus-neiu-ceil-a1-")
+    parser.add_argument("--file_prefix", type=str, required=True, help="ceil61_")
     parser.add_argument("--upload_nc", action='store_true')
+    parser.add_argument("--skip_plot", action="store_true")
 
     args = parser.parse_args()
 
