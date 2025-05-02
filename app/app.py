@@ -210,7 +210,7 @@ def main(args):
             plugin.publish("status", f"Found {len(recent_files)} recent files.")
             
             ds = read_files_ds(recent_files)
-            
+
             if args.upload_nc:
                 nc_file = ds_to_netcdf(ds, args)
                 if nc_file:
