@@ -77,10 +77,6 @@ def read_files_ds(filepaths):
     return ds
 
 
-
-
-
-
 def ds_to_netcdf(ds, args, outdir='/tmp/'):
     timestamp = to_datetime(ds['time'].values[-1])
     # Then, you can use strftime on the Timestamp object
@@ -119,9 +115,9 @@ def plot_dataset(ds, args):
 
     ylim = (0, args.plot_height)
 
-    ds["beta_att"].plot(ax=axes[0], x="time", y="range_km", cmap="YlGnBu", robust=True)
+    ds['beta_att'].plot(ax=axes[0], x='time', y='range_km', cmap='YlGnBu', robust=True)#, vmin=0)
+    plot_cloud_heights(axes[0], ds, color='deeppink')
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[0], x='time', add_legend=False,color='white', linestyle=':')
-    plot_cloud_heights(axes[0], ds, color='red')
     axes[0].set_title("Attenuated Volume Backscatter Coefficient")
     axes[0].set_xlabel("Time [UTC]")
     axes[0].set_ylabel("Height [km]")
@@ -141,8 +137,9 @@ def plot_dataset(ds, args):
     #axes[2].set_ylabel("Height [km]")
     #axes[2].set_ylim(ylim)
 
-    ds["linear_depol_ratio"].plot(ax=axes[1], x="time", y="range_km", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
-    #plot_cloud_heights(axes[1], ds, color='red')
+    #ds["linear_depol_ratio"].plot(ax=axes[1], x="time", y="range_km", cmap="Spectral_r", vmin=0, vmax=0.7, robust=True)
+    ds['linear_depol_ratio'].plot(ax=axes[1], x='time', y='range_km', cmap='PuBuGn', vmin=0, vmax=0.7, robust=True)
+    plot_cloud_heights(axes[1], ds, color='deeppink')
     #ds['sky_condition_cloud_layer_heights'].plot.line(ax=axes[3], x='time', add_legend=False, color='white', linestyle=':')
     axes[1].set_title("Linear Depolarization Ratio")
     axes[1].set_xlabel("Time [UTC]")
@@ -181,7 +178,7 @@ def plot_cloud_heights(ax, ds, color='black'):
         marker=1,
         c=color,
         s=5,
-        linewidths=1
+        linewidths=0.7
     )
 
 
